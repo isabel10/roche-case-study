@@ -17,6 +17,10 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 
 # Load data
+if len(sys.argv) <= 1:
+    print("Please add a filename.")
+    exit(1)
+
 filename = sys.argv[1]
 df = pd.read_excel(
     os.path.join("data/", filename),

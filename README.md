@@ -13,12 +13,12 @@ pip install -r requirements.txt
 
 To run this project use the command:
 ```bash
-python3 main.py <filename>
+python main.py <filename>
 ```
 `<filename>` is the name of the Excel file and must be placed in the `data` folder. 
 For the given data, the following command can be used:
 ```bash
-python3 main.py raan_case_study.xlsx
+python main.py raan_case_study.xlsx
 ```
 
 
