@@ -22,10 +22,10 @@ if len(sys.argv) <= 1:
     exit(1)
 
 filename = sys.argv[1]
-df = pd.read_excel(
-    os.path.join("data/", filename),
-    engine="openpyxl",
-)
+xls = pd.ExcelFile(os.path.join("data/", filename), engine='openpyxl')
+df = pd.read_excel(xls, "edges")
+df_nodes = pd.read_excel(xls, "nodes", usecols=[0, 1, 2])
+
 
 global_config = {
     "node_radius": 15,
@@ -110,7 +110,7 @@ def update_graph(n_clicks, fig_name, dim):
             layout = nx.random_layout(G, seed=10, dim=3)
             valid = 1
     if valid == 1:
-        return network.create_figure(df, layout, global_config)
+        return network.create_figure(df, df_nodes, layout, global_config)
     else:
         fig = go.Figure()
         return fig

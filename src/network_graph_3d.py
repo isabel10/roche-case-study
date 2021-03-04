@@ -27,19 +27,22 @@ def draw_nodes(plot_dict, figure, config):
     x = [item["x"] for key, item in plot_dict.items()]
     y = [item["y"] for key, item in plot_dict.items()]
     z = [item["z"] for key, item in plot_dict.items()]
-    text = [str(key) for key, item in plot_dict.items()]
+    text = [item["name"] for key, item in plot_dict.items()]
+    color = [item["color"] for key, item in plot_dict.items()]
 
     for i in range(len(x)):
         figure.add_trace(go.Scatter3d(
             x=[x[i]],
             y=[y[i]],
             z=[z[i]],
-            text=text[i],
+            text=text[i][0],
             mode='markers+text',
             marker=dict(size=config["node_size_3d"],
-                        color='#52BCA3'),
+                        color=color[i]),
             textfont=dict(size=15),
-            hoverinfo='none',
+            hovertemplate=text[i],
+            hoverlabel=dict(namelength=0),
+            hoverinfo="skip",
             textposition="middle center"
         ))
 
@@ -64,14 +67,16 @@ def draw_edges(plot_dict, figure, config, weight_range):
             p1_line, p2_line, unit_direction = move_middle_points(p1_init, p2_init, config["midpoint_shift_3d"])
 
             weight = item["target_weights"][i]
-            text = '<b>weight {} -> {}: {}</b>'.format(str(key), str(target), str(weight))
+            source_name = item["name"]
+            target_name = plot_dict[target]["name"]
+            text = '<b>{} -> {}: {}</b>'.format(source_name, target_name, str(weight))
             width = config["line_width_3d"]
 
             bidirectional = key in plot_dict[target]["targets"]
             if bidirectional:  # for directed edges in both directions, only add edge once
                 other_weight = plot_dict[target]["target_weights"][plot_dict[target]["targets"].index(key)]
-                text = '<b>weight {} -> {}: {}, weight {} -> {}: {}</b>'.format(str(key), str(target), str(weight),
-                                                                                str(target), str(key), str(other_weight))
+                text = '<b>{} -> {}: {} <br> {} -> {}: {}</b>'.format(source_name, target_name, str(weight),
+                                                                     target_name, source_name, str(other_weight))
                 skip.append((target, key))
 
             # add line
@@ -127,7 +132,7 @@ def draw_edges(plot_dict, figure, config, weight_range):
     return figure
 
 
-def create_plot_dict(df, layout):
+def create_plot_dict(df_edges, df_nodes, layout):
     """
     :param df: Dataframe with source nodes, target nodes, and weights
     :param layout: Coordinates for each node
@@ -135,7 +140,7 @@ def create_plot_dict(df, layout):
     """
     plot_dict = dict()
 
-    for id, row in df.iterrows():
+    for id, row in df_edges.iterrows():
         source_id = row["source_id"]
         target_id = row["target_id"]
         weight = row["weights"]
@@ -146,6 +151,8 @@ def create_plot_dict(df, layout):
                     "x": layout[add_id][0],
                     "y": layout[add_id][1],
                     "z": layout[add_id][2],
+                    "color": df_nodes[df_nodes["node_id"] == add_id]["node_color"].values[0],
+                    "name": df_nodes[df_nodes["node_id"] == add_id]["node_label"].values[0],
                     "targets": [],
                     "target_weights": []
                 }
@@ -153,12 +160,12 @@ def create_plot_dict(df, layout):
 
         plot_dict[source_id]["targets"].append(target_id)
         plot_dict[source_id]["target_weights"].append(weight)
-    weight_range = (min(df["weights"]), max(df["weights"]))
+    weight_range = (min(df_edges["weights"]), max(df_edges["weights"]))
 
     return plot_dict, weight_range
 
 
-def create_figure(df, layout, config):
+def create_figure(df_edges, df_nodes, layout, config):
     """
     :param df: Dataframe with source nodes, target nodes, and weights
     :param layout: Coordinates for each node
@@ -166,7 +173,7 @@ def create_figure(df, layout, config):
     :return: Create a 3D directed weighted network graph from the given dataframe
     """
     fig = go.Figure()
-    plot_dict, weight_range = create_plot_dict(df, layout)
+    plot_dict, weight_range = create_plot_dict(df_edges, df_nodes, layout)
     fig = draw_nodes(plot_dict, fig, config)
     fig = draw_edges(plot_dict, fig, config, weight_range)
     fig.update_layout(
@@ -175,6 +182,7 @@ def create_figure(df, layout, config):
                    x=0.5),
         template="none",
         autosize=False,
+        hovermode="closest",
         width=800,
         height=800,
         showlegend=False,

@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ```
 ## How to Run
 
-To run this project use the command:
+To run this project, use the command:
 ```bash
 python main.py <filename>
 ```
@@ -24,8 +24,11 @@ python main.py raan_case_study.xlsx
 
 ## Description
 
-The input is given as an Excel document with the columns "source_id", "target_id", and "weights".
+The input is given as an Excel document with two sheets named "edges" and "nodes". 
+The "edges" sheet contains columns "source_id", "target_id", and "weights".
 Each row represents a weighted directed edge from the source node to the target node.
+The "nodes" sheet contains the columns "node_id", "node_color", and "node_label".
+It is used to describe the names and colors of each node.
 The output consists of visualizations representing the given network. 
 There are several options for choosing the visualization type. 
 Both the dimension and the layout can be chosen from a dropdown menu. 
@@ -33,6 +36,7 @@ The figure is shown after clicking the submit button.
 
 ### 2D
 In the 2-dimensional visualization, the weights are given on the corresponding edges.
+The letter on the nodes represents the first letter of the corresponding name. The full name is shown when hovering over the node.
 The following four layouts can be chosen:
 * Spring Layout (example below)
 * Random Layout
@@ -42,8 +46,9 @@ The following four layouts can be chosen:
 ![Image](images/2d_spring_layout.png "2D Spring Layout")
 
 ### 3D
-In the 3-dimensional visualization, the color of the edges represent the weights.
+In the 3-dimensional visualization, the color of the edges represents the weights.
 Additionally, by hovering over the edges, a description of the edge direction and weight is given.
+The full name of each node is displayed when hovering over the respective node.
 The figure can be turned by clicking on the figure and moving the mouse. Zooming in and out is possible by scrolling up and down.
 The following two layouts can be chosen:
 * Spring Layout (example below)

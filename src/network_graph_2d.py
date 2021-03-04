@@ -39,7 +39,8 @@ def draw_nodes(plot_dict, figure, config):
     """
     x = [item["x"] for key, item in plot_dict.items()]
     y = [item["y"] for key, item in plot_dict.items()]
-    text = [str(key) for key, item in plot_dict.items()]
+    text = [item["name"] for key, item in plot_dict.items()]
+    color = [item["color"] for key, item in plot_dict.items()]
 
     for i in range(len(x)):
         figure.add_trace(go.Scatter(
@@ -47,11 +48,14 @@ def draw_nodes(plot_dict, figure, config):
             y=[y[i]],
             mode='markers+text',
             marker=dict(size=config["node_radius"] * 2,
-                        color='#52BCA3'),
+                        color=color[i]),
             legendgroup=text[i],
-            text=text[i],
+            text=text[i][0],
+            hovertemplate=text[i],
+            hoverlabel=dict(namelength=0),
+            hoverinfo="skip",
             textfont=dict(size=15),
-            hoverinfo='none',
+            #hoverinfo='none',
         ))
 
     return figure
@@ -105,7 +109,7 @@ def draw_edges(plot_dict, figure, config):
     return figure
 
 
-def create_plot_dict(df, layout):
+def create_plot_dict(df_edges, df_nodes, layout):
     """
     :param df: Dataframe with source nodes, target nodes, and weights
     :param layout: Coordinates for each node
@@ -113,7 +117,7 @@ def create_plot_dict(df, layout):
     """
     plot_dict = dict()
 
-    for id, row in df.iterrows():
+    for id, row in df_edges.iterrows():
         source_id = row["source_id"]
         target_id = row["target_id"]
         weight = row["weights"]
@@ -123,6 +127,8 @@ def create_plot_dict(df, layout):
                 new_element = {
                     "x": layout[add_id][0],
                     "y": layout[add_id][1],
+                    "color": df_nodes[df_nodes["node_id"] == add_id]["node_color"].values[0],
+                    "name": df_nodes[df_nodes["node_id"] == add_id]["node_label"].values[0],
                     "targets": [],
                     "target_weights": []
                 }
@@ -134,7 +140,7 @@ def create_plot_dict(df, layout):
     return plot_dict
 
 
-def create_figure(df, layout, config):
+def create_figure(df_edges, df_nodes, layout, config):
     """
     :param df: Dataframe with source nodes, target nodes, and weights
     :param layout: Coordinates for each node
@@ -142,7 +148,7 @@ def create_figure(df, layout, config):
     :return: Create a 2D directed weighted network graph from the given dataframe
     """
     fig = go.Figure()
-    plot_dict = create_plot_dict(df, layout)
+    plot_dict = create_plot_dict(df_edges, df_nodes, layout)
     fig = draw_nodes(plot_dict, fig, config)
     fig = draw_edges(plot_dict, fig, config)
     fig.update_layout(
@@ -153,7 +159,8 @@ def create_figure(df, layout, config):
         autosize=False,
         width=800,
         height=800,
-        showlegend=False
+        showlegend=False,
+        hovermode="closest"
     )
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
